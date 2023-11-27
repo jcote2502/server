@@ -14,10 +14,14 @@ router.post('/registeruser', cors() , dbControllers.addUser);
 // update
 router.post('/updateProfile', cors() , dbControllers.updateUser);
 
+// delete
+router.post('/deleteAccount', cors() , dbControllers.deleteUser)
 
 // read
 router.get('/player', cors() , dbControllers.searchByPlayer);
 router.get('/team', cors() , dbControllers.searchByTeam);
 router.get('/product', cors() , dbControllers.getProduct);
+router.get('/jerseys', cors() , dbControllers.getJerseys);
+router.get('/user', cors() , dbControllers.getUser);
 
 module.exports = router;
