@@ -271,7 +271,7 @@ exports.getUser = async (req , res) => {
             console.log('Error fetching user:',err);
             res.status(500).json({error:'Internal Server Error'});
         } else if (results.length>0){
-            res.status(200).json({user:results, message:'Success'});
+            res.status(200).json({user:results[0], message:'Success'});
             console.log(results);
         }else {
             res.status(404).json({message: 'User not found'});
