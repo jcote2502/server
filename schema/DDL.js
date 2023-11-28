@@ -2,7 +2,7 @@ function createTables(db) {
     // describe all tables
     const tables = {
     q1:
-    [`CREATE TABLE IF NOT EXISTS user (
+    [`CREATE TABLE IF NOT EXISTS 431_FANSHOP.User (
         uid INT PRIMARY KEY,
         lname VARCHAR(25),
         fname VARCHAR(25),
@@ -11,6 +11,17 @@ function createTables(db) {
     );`,
     "Error creating user table: "
     ],
+    q2:
+    [`CREATE TABLE 'Cart'(
+      'cart_ID' int NOT NULL AUTO_INCREMENT,
+      'uid' int unsigned NOT NULL,
+      'product_ID' int NOT NULL,
+      PRIMARY KEY ('cart_ID','uid','product_ID'),
+      KEY 'cart_idx' ('uid'),
+      CONSTRAINT 'cart' FORIEGN KEY ('uid') REFRENCES 'User' ('user_ID')
+    );`,
+    "Error Creating Cart Table: "
+    ]
 
     // fill in missing tables with structure above
 
