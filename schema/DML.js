@@ -1,5 +1,7 @@
 const {db} = require('../DB_INIT.js');
 
+// AUTHOR(s): Justin Cote, Liam Garrett
+// Contains all DML QUERIES for db interaction
 
 // Promise Function Used to Execute Queries
 function executeQuery(query, values) {
@@ -93,6 +95,25 @@ exports.addUser = async (req, res) => {
     }
 }
 
+// Takes product_ID and user_ID
+// returns cartID
+exports.addCartItem = async (req, res) =>{
+
+}
+
+// takes uid
+// fetches all records from cart with uid
+// sum the price of all records to store
+// add new transaction(total,date)
+// store generated trans_id
+// add trans_id and uid to ledger
+// for every product_ID in cart
+//      add PID, Trans_ID
+// idea join tables and add all at once
+exports.createTransaction = async (req, res) => {
+
+}
+
 
 //--UPDATE CALLS
 
@@ -135,6 +156,18 @@ exports.deleteUser = async (req, res) => {
         console.log("Error deleting user :", error);
         res.status(500).json({error:'Internal Server Error'});
     }
+}
+
+// takes uid
+// deletes all records with uid from the table
+exports.clearCart = async (req, res) => {
+
+}
+
+// takes cartId
+// removes that record from table
+exports.removeCartItem = async (req, res) => {
+
 }
 
 
