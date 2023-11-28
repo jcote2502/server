@@ -95,13 +95,22 @@ exports.addUser = async (req, res) => {
     }
 }
 
+// TODO
+// Takes value and uid
+// adds record to search table
+exports.addRecentSearch = async (req, res) =>{
+
+}
+
+// TODO
 // Takes product_ID and user_ID
 // returns cartID
 exports.addCartItem = async (req, res) =>{
 
 }
 
-// takes uid
+// TODO
+// Takes uid
 // fetches all records from cart with uid
 // sum the price of all records to store
 // add new transaction(total,date)
@@ -158,12 +167,23 @@ exports.deleteUser = async (req, res) => {
     }
 }
 
+
+// TODO
+// takes uid 
+// removes all searches 
+exports.clearSearches = async (req, res) => {
+
+}
+
+
+// TODO
 // takes uid
 // deletes all records with uid from the table
 exports.clearCart = async (req, res) => {
 
 }
 
+// TODO
 // takes cartId
 // removes that record from table
 exports.removeCartItem = async (req, res) => {
