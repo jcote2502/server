@@ -12,7 +12,7 @@ function createTables(db) {
     "Error creating user table: "
     ],
     q2:
-    [`CREATE TABLE 'Cart'(
+    [`CREATE TABLE IF NOT EXISTS 431_FANSHOP.User(
       'cart_ID' int NOT NULL AUTO_INCREMENT,
       'uid' int unsigned NOT NULL,
       'product_ID' int NOT NULL,
