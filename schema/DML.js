@@ -25,7 +25,7 @@ exports.login = async (req, res) => {
     console.log(email,password);
     const query = `
         SELECT id , fname
-        FROM 431_FANSHOP.User
+        FROM 431_FANSHOP.User U
         JOIN 431_FANSHOP.Password ON User.user_ID = Password.id
         WHERE email = ? AND password = ?;
     `;
@@ -107,6 +107,13 @@ exports.addRecentSearch = async (req, res) =>{
 // returns cartID
 exports.addCartItem = async (req, res) =>{
 
+}
+
+// TODO 
+// takes productid userid transid
+// add refund record
+exports.addRefund = async (req, res) =>{
+    
 }
 
 // TODO
@@ -311,6 +318,7 @@ exports.getJerseys = async (req, res) => {
     }
 }
 
+// Takes user_ID
 // select user
 exports.getUser = async (req , res) => {
     const {uid} = req.query;
@@ -331,3 +339,52 @@ exports.getUser = async (req , res) => {
         }
     })
 }
+
+// TODO
+// takes uid
+// selects all cart items
+exports.getUserCart = async (req, res) => {
+
+}
+
+// TODO 
+// takes uid
+// selects all searches
+exports.getSearches = async (req, res) => {
+
+}
+
+// TODO 
+// takes uid
+// selects all refunds
+exports.getRefunds = async (req, res) => {
+
+}
+
+// JOINS FIVE TABLES TO RECORD ALL TRANSACTIONS AND INFORMATION FOR DISPLAY OR USE
+// takes uid
+// selects all transactions 
+exports.getTransactions = async (req, res) => {
+    const {uid} = req.query;
+    const query = `
+        SELECT * 
+        FROM 431_FANSHOP.Ledger L
+        JOIN 431_FANSHOP.Transaction T ON L.trans_ID = T.trans_ID
+        JOIN 431_FANSHOP.User U ON L.user_ID = U.user_ID
+        JOIN 431_FANSHOP.Refund R ON L.trans_ID = R.trans_ID 
+        JOIN 431_FANSHOP.Product P ON R.product_ID = P.product_ID
+        WHERE L.user_ID = ?;
+    `;
+    db.query(query, [uid], (err, results)=>{
+        if (err){
+            console.log('Error fetching transactions');
+            res.status(500).json({error:'Internal Server Error'});
+        }else if (results.length>0){
+            res.status(200).json({transactions:results, message:'Success'});
+            console.log(results);
+        }else {
+            res.status(404).json({message: 'Transactions not found'});
+        }
+    })
+}
+
