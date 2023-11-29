@@ -38,7 +38,6 @@ exports.login = async (req, res) => {
                 if (results.length>0){
                     const uid = results[0].id;
                     const fname = results[0].fname;
-                    console.log('User authenticated. User ID:', uid);
                     res.status(200).json({userId: uid,fname:fname, message: 'User Authenticated'});
                 } else {
                     console.log('Invalid email or password.');
@@ -94,11 +93,31 @@ exports.addUser = async (req, res) => {
     }
 }
 
-// TODO
+
 // Takes product_ID and user_ID
 // returns cartID
 exports.addCartItem = async (req, res) =>{
     const {uid} = req.body;
+    const query =`
+        INSERT INTO 431_FANSHOP.Cart (uid,product_ID)
+        VALUES (?,?)
+    `;
+    try{
+    db.query(query, [uid, pid], (err,results)=> {
+        if (err){
+            console.error('Error Adding to Cart:', err);
+            res.status(500).json({error: "Internal Server Error"});
+        }
+        else{
+            res.status(200).json({message: 'Item Added To Cart'});
+        }
+
+    });
+    }
+    catch(error){
+        console.error('Error Adding To Cart', error);
+        res.status(500).json({error: "Internal Server ERror"});
+    }
 }
 
 // TODO 
@@ -127,15 +146,19 @@ exports.createTransaction = async (req, res) => {
     `;
 
     const transIdQuery = `
-        SELECT LAST_INSERT_ID() AS trans_ID;
+        SELECT trans_ID
+        FROM 431_FANSHOP.Ledger
+        WHERE user_ID = ?
+        ORDER BY trans_ID DESC
+        LIMIT 1;
     `;
 
     const transactionQuery = `
-        INSERT INTO 431_FANSHOP.Transaction (trans_ID, total, date)
+        INSERT INTO 431_FANSHOP.Transaction (trans_ID, total, pdate)
         SELECT ?, SUM(P.price), NOW()
         FROM 431_FANSHOP.Cart C
         JOIN 431_FANSHOP.Product P ON C.product_ID = P.product_ID
-        WHERE C.uid = ?
+        WHERE C.uid = ?;
     `;
 
     const cartQuery = `
@@ -149,45 +172,45 @@ exports.createTransaction = async (req, res) => {
         VALUES (?,?);
     `;
 
-    try{
-        db.query(ledgerQuery,[uid],(err,results)=>{
-            if (err){
-                console.error('Error Adding to Ledger:',err);
-                res.status(500).json({ error: "Internal Server Error"});
+    try {
+        db.query(ledgerQuery, [uid], (err) => {
+            if (err) {
+                console.error('Error Adding to Ledger:', err);
+                res.status(500).json({ error: "Internal Server Error" });
             }
         });
-        const transResponse = db.query(transIdQuery,[],(err, results)=>{
-            if(err){
-                console.error('Error getting TransID:',err);
-                res.status(500).json({ error: "Internal Server Error"});
+        db.query(transIdQuery, [uid], (err, results) => {
+            if (err) {
+                console.error('Error getting TransID:', err);
+                res.status(500).json({ error: "Internal Server Error" });
+            } else {
+                const transID = results[0].trans_ID;
+                db.query(transactionQuery, [transID, uid], (err) => {
+                    if (err) {
+                        console.error('Error Adding to Transaction:', err);
+                        res.status(500).json({ error: "Internal Server Error" });
+                    } else {
+                        db.query(cartQuery, [uid], (err, cart) => {
+                            if (err) {
+                                console.error('Error Fetching Cart:', err);
+                                res.status(500).json({ error: "Internal Server Error" });
+                            } else {
+                                const products = cart;
+                                for (const product of products) {
+                                    db.query(transactionInfoQuery, [product.product_ID, transID], (err, results) => {
+                                        if (err) {
+                                            console.error('Error Adding to Transaction_INFO:', err);
+                                            res.status(500).json({ error: "Internal Server Error" });
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                    }
+                });
             }
         });
-        const transID = result[0].trans_ID;
-
-        db.query(transactionQuery, [transID], (err, results)=>{
-            if(err){
-                console.error('Error Adding to Transaction:',err);
-                res.status(500).json({ error: "Internal Server Error"});
-            }
-        })
-
-        const products = db.query(cartQuery, [uid], (err, results)=>{
-            if (err){
-                console.error('Error Fetching Cart:',err);
-                res.status(500).json({ error: "Internal Server Error"});
-            }
-        });
-
-        for (const product of products){
-            db.query(transactionInfoQuery, [product.product_ID, transID],(err, results)=>{
-                if (err){
-                    console.error('Error Adding to Transaction_INFO:',err);
-                    res.status(500).json({ error: "Internal Server Error"});
-                }
-            });
-        }
-
-        res.status(200).json({message: 'Purchase Successful'});
+        res.status(200).json({ message: 'Purchase Successful' });
     }catch(error){
         console.error('Error Purchasing Items:', error);
         res.status(500).json({ error: "Internal Server Error"});
@@ -240,18 +263,41 @@ exports.deleteUser = async (req, res) => {
 
 
 
-// TODO
+
 // takes uid
 // deletes all records with uid from the table
 exports.clearCart = async (req, res) => {
-
+    const { uid } = req.body;
+    const query = `
+        DELETE FROM 431_FANSHOP.Cart
+        WHERE uid = ?;
+    `;
+    try {
+        executeQuery(query, [uid]);
+        res.status(200).json({ message: 'successfully cleared cart' });
+    } catch (error) {
+        console.log("Error clearing cart:", error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 }
 
-// TODO
+
+
 // takes cartId
 // removes that record from table
 exports.removeCartItem = async (req, res) => {
-
+    const {cid} = req.body;
+    const query = `
+        DELETE FROM 431_FANSHOP.Cart
+        WHERE cart_ID = ?;
+    `;
+    try{
+        executeQuery(query, [cid]);
+        res.status(200).json({ message: 'successfully removed item' });
+    }catch(error){
+        console.log("Error clearing item from cart:", error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 }
 
 
@@ -397,19 +443,35 @@ exports.getUser = async (req , res) => {
     })
 }
 
-// TODO
+
 // takes uid
 // selects all cart items
 exports.getUserCart = async (req, res) => {
+    try {
+        const { uid } = req.query;
+        const query = `
+            SELECT P.product_ID, P.gender, P.title, P.size, P.team, P.color, PL.lname, PL.fname, P.Price , C.cart_ID
+            FROM 431_FANSHOP.Product AS P
+            JOIN 431_FANSHOP.Cart AS C ON P.product_ID = C.product_ID
+            JOIN 431_FANSHOP.Player AS PL ON PL.player = P.player
+            WHERE C.uid = ?
+            ORDER BY C.cart_ID DESC;
+        `;
+        db.query(query, [uid], (err, results) => {
+            if (err) {
+                console.error('Error fetching cart:', err);
+                res.status(500).json({ error: "Internal Server Error" });
+            } else {
+                res.status(200).json({ cart: results, message: 'Success.' });
+            }
+        });
 
+    } catch (error) {
+        console.error('Error Retrieving Cart:', error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 }
 
-// TODO 
-// takes uid
-// selects all searches
-exports.getSearches = async (req, res) => {
-
-}
 
 // TODO 
 // takes uid

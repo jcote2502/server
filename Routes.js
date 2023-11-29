@@ -10,7 +10,7 @@ router.get('/authentication', cors() , dbControllers.login); // done
 
 // insert
 router.post('/registeruser', cors() , dbControllers.addUser); // done
-router.post('/addItem', cors() , dbControllers.addCartItem); 
+router.post('/addItem', cors() , dbControllers.addCartItem); //done
 router.post('/purchase', cors() , dbControllers.createTransaction); // done
 router.post('/addRefund', cors() , dbControllers.addRefund);
 
@@ -19,8 +19,8 @@ router.post('/updateProfile', cors() , dbControllers.updateUser); // done
 
 // delete
 router.post('/deleteAccount', cors() , dbControllers.deleteUser) // done
-router.post('/clearCart', cors() , dbControllers.clearCart); 
-router.post('/removeCartItem', cors() , dbControllers.removeCartItem); 
+router.post('/clearCart', cors() , dbControllers.clearCart); //done
+router.post('/removeCartItem', cors() , dbControllers.removeCartItem); //done
 
 // read
 router.get('/player', cors() , dbControllers.searchByPlayer); // done
@@ -28,7 +28,7 @@ router.get('/team', cors() , dbControllers.searchByTeam); // done
 router.get('/product', cors() , dbControllers.getProduct); // done
 router.get('/jerseys', cors() , dbControllers.getJerseys); // done
 router.get('/user', cors() , dbControllers.getUser); // done
-router.get('/cart', cors() , dbControllers.getUserCart);
+router.get('/cart', cors() , dbControllers.getUserCart);// done
 router.get('/refund', cors() , dbControllers.getRefunds);
 router.get('/transactions', cors() , dbControllers.getTransactions); // done
 
