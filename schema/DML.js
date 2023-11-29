@@ -1,4 +1,4 @@
-const {db} = require('../DB_INIT.js');
+const { db } = require('../DB_INIT.js');
 
 // AUTHOR(s): Justin Cote, Liam Garrett
 // Contains all DML QUERIES for db interaction
@@ -6,7 +6,7 @@ const {db} = require('../DB_INIT.js');
 // Promise Function Used to Execute Queries
 function executeQuery(query, values) {
     return new Promise((resolve, reject) => {
-        db.query(query,values,(err,result)=>{
+        db.query(query, values, (err, result) => {
             if (err) {
                 reject(err);
             } else {
@@ -21,8 +21,8 @@ function executeQuery(query, values) {
 // takes email and password
 // returns user_ID
 exports.login = async (req, res) => {
-    const {email, password} = req.query;
-    console.log(email,password);
+    const { email, password } = req.query;
+    console.log(email, password);
     const query = `
         SELECT id , fname
         FROM 431_FANSHOP.User
@@ -30,24 +30,24 @@ exports.login = async (req, res) => {
         WHERE email = ? AND password = ?;
     `;
     try {
-        db.query(query, [email,password], (err, results) => {
+        db.query(query, [email, password], (err, results) => {
             if (err) {
-                console.error('Error authenticating user:',err);
-                res.status(500).json({ error: "Internal Server Error"});
+                console.error('Error authenticating user:', err);
+                res.status(500).json({ error: "Internal Server Error" });
             } else {
-                if (results.length>0){
+                if (results.length > 0) {
                     const uid = results[0].id;
                     const fname = results[0].fname;
-                    res.status(200).json({userId: uid,fname:fname, message: 'User Authenticated'});
+                    res.status(200).json({ userId: uid, fname: fname, message: 'User Authenticated' });
                 } else {
                     console.log('Invalid email or password.');
-                    res.status(401).json({ error: 'Invalid email or password.'});
+                    res.status(401).json({ error: 'Invalid email or password.' });
                 }
             }
-        }); 
+        });
     } catch (error) {
         console.error('Error during login:', error);
-        res.status(500).json({error: 'Internal Server Error'});
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 }
 
@@ -72,59 +72,59 @@ exports.addUser = async (req, res) => {
         WHERE email = ?;
     `;
     try {
-        await executeQuery(userQuery, [email,fname,lname,password]);
-        await executeQuery(passQuery, [password,email]);
-        db.query(idQuery, [email], (err, results)=>{
-            if (err){
-                console.error('Error Fetching UID:',err);
-                res.status(500).json({ error: "Internal Server Error"});
+        await executeQuery(userQuery, [email, fname, lname, password]);
+        await executeQuery(passQuery, [password, email]);
+        db.query(idQuery, [email], (err, results) => {
+            if (err) {
+                console.error('Error Fetching UID:', err);
+                res.status(500).json({ error: "Internal Server Error" });
             }
-            else if (results.length>0){
+            else if (results.length > 0) {
                 console.log(results[0])
-                res.status(200).json({uid:results[0] ,message: 'User Signed Up'});
+                res.status(200).json({ uid: results[0], message: 'User Signed Up' });
             } else {
-                res.status(404).json({ message: 'UID Not Found'});
+                res.status(404).json({ message: 'UID Not Found' });
             }
         })
         console.log('User added to database.');
     } catch (error) {
-        console.error('Error registering user:',error);
-        res.status(500).json({message: error});
+        console.error('Error registering user:', error);
+        res.status(500).json({ message: error });
     }
 }
 
 
 // Takes product_ID and user_ID
 // returns cartID
-exports.addCartItem = async (req, res) =>{
-    const {uid} = req.body;
-    const query =`
+exports.addCartItem = async (req, res) => {
+    const { uid, pid } = req.body;
+    const query = `
         INSERT INTO 431_FANSHOP.Cart (uid,product_ID)
         VALUES (?,?)
     `;
-    try{
-    db.query(query, [uid, pid], (err,results)=> {
-        if (err){
-            console.error('Error Adding to Cart:', err);
-            res.status(500).json({error: "Internal Server Error"});
-        }
-        else{
-            res.status(200).json({message: 'Item Added To Cart'});
-        }
+    try {
+        db.query(query, [uid, pid], (err, results) => {
+            if (err) {
+                console.error('Error Adding to Cart:', err);
+                res.status(500).json({ error: "Internal Server Error" });
+            }
+            else {
+                res.status(200).json({ message: 'Item Added To Cart' });
+            }
 
-    });
+        });
     }
-    catch(error){
+    catch (error) {
         console.error('Error Adding To Cart', error);
-        res.status(500).json({error: "Internal Server ERror"});
+        res.status(500).json({ error: "Internal Server ERror" });
     }
 }
 
 // TODO 
 // takes productid userid transid
 // add refund record
-exports.addRefund = async (req, res) =>{
-    const {uid, pid, tid} = req.body;
+exports.addRefund = async (req, res) => {
+    const { uid, pid, tid } = req.body;
 }
 
 // TODO
@@ -138,7 +138,8 @@ exports.addRefund = async (req, res) =>{
 //      add PID, Trans_ID
 // idea join tables and add all at once
 exports.createTransaction = async (req, res) => {
-    const {uid} = req.body;
+    const { uid, product_IDS } = req.body;
+    console.log(product_IDS);
 
     const ledgerQuery = `
         INSERT INTO 431_FANSHOP.Ledger (user_ID)
@@ -155,16 +156,9 @@ exports.createTransaction = async (req, res) => {
 
     const transactionQuery = `
         INSERT INTO 431_FANSHOP.Transaction (trans_ID, total, pdate)
-        SELECT ?, SUM(P.price), NOW()
-        FROM 431_FANSHOP.Cart C
-        JOIN 431_FANSHOP.Product P ON C.product_ID = P.product_ID
-        WHERE C.uid = ?;
-    `;
-
-    const cartQuery = `
-        SELECT product_ID
-        FROM 431_FANSHOP.Cart
-        WHERE uid = ?;
+        SELECT ?, SUM(price), NOW()
+        FROM 431_FANSHOP.Product 
+        WHERE product_ID = ? OR product_ID = ? OR product_ID = ?;
     `;
 
     const transactionInfoQuery = `
@@ -185,19 +179,15 @@ exports.createTransaction = async (req, res) => {
                 res.status(500).json({ error: "Internal Server Error" });
             } else {
                 const transID = results[0].trans_ID;
-                db.query(transactionQuery, [transID, uid], (err) => {
-                    if (err) {
-                        console.error('Error Adding to Transaction:', err);
-                        res.status(500).json({ error: "Internal Server Error" });
-                    } else {
-                        db.query(cartQuery, [uid], (err, cart) => {
-                            if (err) {
-                                console.error('Error Fetching Cart:', err);
-                                res.status(500).json({ error: "Internal Server Error" });
-                            } else {
-                                const products = cart;
-                                for (const product of products) {
-                                    db.query(transactionInfoQuery, [product.product_ID, transID], (err, results) => {
+                db.query(transactionQuery, [transID, product_IDS[0], product_IDS[1],
+                    product_IDS[2]], (err) => {
+                        if (err) {
+                            console.error('Error Adding to Transaction:', err);
+                            res.status(500).json({ error: "Internal Server Error" });
+                        } else {
+                            for (const product of product_IDS) {
+                                if (product) {
+                                    db.query(transactionInfoQuery, [product, transID], (err, results) => {
                                         if (err) {
                                             console.error('Error Adding to Transaction_INFO:', err);
                                             res.status(500).json({ error: "Internal Server Error" });
@@ -205,15 +195,30 @@ exports.createTransaction = async (req, res) => {
                                     });
                                 }
                             }
-                        });
-                    }
-                });
+                            // db.query(cartQuery, [uid], (err, cart) => {
+                            //     if (err) {
+                            //         console.error('Error Fetching Cart:', err);
+                            //         res.status(500).json({ error: "Internal Server Error" });
+                            //     } else {
+                            //         const products = cart;
+                            //         for (const product of products) {
+                            //             db.query(transactionInfoQuery, [product.product_ID, transID], (err, results) => {
+                            //                 if (err) {
+                            //                     console.error('Error Adding to Transaction_INFO:', err);
+                            //                     res.status(500).json({ error: "Internal Server Error" });
+                            //                 }
+                            //             });
+                            //         }
+                            //     }
+                            // });
+                        }
+                    });
             }
         });
         res.status(200).json({ message: 'Purchase Successful' });
-    }catch(error){
+    } catch (error) {
         console.error('Error Purchasing Items:', error);
-        res.status(500).json({ error: "Internal Server Error"});
+        res.status(500).json({ error: "Internal Server Error" });
     }
 }
 
@@ -223,7 +228,7 @@ exports.createTransaction = async (req, res) => {
 // takes team, address, uid
 // updates user table with new team or address
 exports.updateUser = async (req, res) => {
-    const {team, address, uid} = req.body;
+    const { team, address, uid } = req.body;
     const query = `
         UPDATE 431_FANSHOP.User
         SET team = ?, address = ?
@@ -231,12 +236,12 @@ exports.updateUser = async (req, res) => {
     `;
 
     try {
-        await executeQuery(query, [team,address,uid]);
-        res.status(200).json({message: 'Successfully updated User.'});
-        console.log('Updated User:',uid);
+        await executeQuery(query, [team, address, uid]);
+        res.status(200).json({ message: 'Successfully updated User.' });
+        console.log('Updated User:', uid);
     } catch (error) {
-        console.error('Error Updating user:',error);
-        res.status(500).json({message: error});
+        console.error('Error Updating user:', error);
+        res.status(500).json({ message: error });
     }
 }
 
@@ -246,7 +251,7 @@ exports.updateUser = async (req, res) => {
 // deletes user from database
 //  -> user , password , ledger , transactions , refund
 exports.deleteUser = async (req, res) => {
-    const {uid} = req.body;
+    const { uid } = req.body;
     const query = `
         DELETE FROM 431_FANSHOP.User
         WHERE user_ID = ?;
@@ -254,10 +259,10 @@ exports.deleteUser = async (req, res) => {
     try {
         executeQuery(query, [uid]);
         console.log("Deleted user :", uid);
-        res.status(200).json({message:'successfully deleted user'});
+        res.status(200).json({ message: 'successfully deleted user' });
     } catch (error) {
         console.log("Error deleting user :", error);
-        res.status(500).json({error:'Internal Server Error'});
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 }
 
@@ -286,15 +291,15 @@ exports.clearCart = async (req, res) => {
 // takes cartId
 // removes that record from table
 exports.removeCartItem = async (req, res) => {
-    const {cid} = req.body;
+    const { cid } = req.body;
     const query = `
         DELETE FROM 431_FANSHOP.Cart
         WHERE cart_ID = ?;
     `;
-    try{
+    try {
         executeQuery(query, [cid]);
         res.status(200).json({ message: 'successfully removed item' });
-    }catch(error){
+    } catch (error) {
         console.log("Error clearing item from cart:", error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
@@ -306,59 +311,59 @@ exports.removeCartItem = async (req, res) => {
 // takes query string of player name 
 // returns product_ID , fname , lname , title , team , color , size , gender 
 exports.searchByPlayer = async (req, res) => {
-    const {fname, lname} = req.query;
+    const { fname, lname } = req.query;
     const query = `
-        SELECT P.product_ID, PL.fname, PL.lname, P.title, P.team, P.color, P.size, P.gender
+        SELECT P.product_ID, PL.fname, PL.lname, P.title, P.team, P.color, P.size, P.gender, P.price
         FROM 431_FANSHOP.Product P
         JOIN 431_FANSHOP.Player PL ON P.player = PL.pid 
         WHERE PL.lname = ? AND PL.fname = ?;
     `;
     try {
-        db.query(query, [lname,fname], (err, results) => {
-            if (err){
-                console.error('Error Fetching Player:',err);
-                res.status(500).json({ error: "Internal Server Error"});
+        db.query(query, [lname, fname], (err, results) => {
+            if (err) {
+                console.error('Error Fetching Player:', err);
+                res.status(500).json({ error: "Internal Server Error" });
             }
-            else if (results.length>0){
+            else if (results.length > 0) {
                 res.status(200).json({ products: results });
             } else {
-                res.status(404).json({ message: 'Player Not Found'});
+                res.status(404).json({ message: 'Player Not Found' });
             }
         })
-    } catch (error){
+    } catch (error) {
         console.error('Error during search:', error);
-        res.status(500).json({error: 'Internal Server Error'});
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 }
 
 // takes query string of team name
 // returns product_ID, gender, title, size, team, color, fname, lname, details
 exports.searchByTeam = async (req, res) => {
-    const {team} = req.query;
+    const { team } = req.query;
     const query = `
-        SELECT P.product_ID, P.gender, P.title, P.size, P.team, P.color,
+        SELECT P.product_ID, P.gender, P.title, P.size, P.team, P.color, P.price
         CASE WHEN P.title = 'jersey' THEN PL.fname ELSE NULL END AS fname,
         CASE WHEN P.title = 'jersey' THEN PL.lname ELSE NULL END AS lname,
         CASE WHEN P.title != 'jersey' THEN P.details ELSE NULL END AS details
         FROM 431_FANSHOP.Product P
-        LEFT JOIN 431_FANSHOP.Player PL ON P.player = PL.pid
-        WHERE P.team = ?;
+        LEFT JOIN 431_FANSHOP.Player PL ON P.player = PL.player
+        WHERE P.team = ?
     `;
-    try{
-        db.query(query,[team],(err,results)=>{
-            if (err){
-                console.error('Error searching team:',err);
-                res.status(500).json({ error: "Internal Server Error"});
+    try {
+        db.query(query, [team], (err, results) => {
+            if (err) {
+                console.error('Error searching team:', err);
+                res.status(500).json({ error: "Internal Server Error" });
             }
-            else if (results.length>0){
+            else if (results.length > 0) {
                 res.status(200).json({ products: results });
             } else {
-                res.status(404).json({ message: 'Team Not Found'});
+                res.status(404).json({ message: 'Team Not Found' });
             }
         })
-    }catch (error) {
-        console.error('Error searching team:',error);
-        res.status(500).json({error: 'Internal Server Error'});
+    } catch (error) {
+        console.error('Error searching team:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 
 }
@@ -366,7 +371,7 @@ exports.searchByTeam = async (req, res) => {
 // takes product id
 // returns product_ID, gender, title, size, team, color, fname, lname, details
 exports.getProduct = async (req, res) => {
-    const {product_ID} = req.query;
+    const { product_ID } = req.query;
     const query = `
         SELECT P.product_ID, P.gender, P.title, P.size, P.team, P.color,
         CASE WHEN P.title = 'jersey' THEN PL.fname ELSE NULL END AS fname,
@@ -376,21 +381,21 @@ exports.getProduct = async (req, res) => {
         LEFT JOIN 431_FANSHOP.Player PL ON P.player = PL.pid
         WHERE P.product_ID = ?;
     `;
-    try{
-        db.query(query,[product_ID],(err,results)=>{
-            if (err){
-                console.error('Error Fetching Product:',err);
-                res.status(500).json({ error: "Internal Server Error"});
+    try {
+        db.query(query, [product_ID], (err, results) => {
+            if (err) {
+                console.error('Error Fetching Product:', err);
+                res.status(500).json({ error: "Internal Server Error" });
             }
-            else if (results.length>0){
+            else if (results.length > 0) {
                 res.status(200).json({ product: results });
             } else {
-                res.status(404).json({ message: 'Product Not Found'});
+                res.status(404).json({ message: 'Product Not Found' });
             }
         })
-    }catch (error) {
-        console.error('Error fetching product:',error);
-        res.status(500).json({error: 'Internal Server Error'});
+    } catch (error) {
+        console.error('Error fetching product:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 }
 
@@ -403,42 +408,42 @@ exports.getJerseys = async (req, res) => {
         WHERE P.size = 'medium'
         LIMIT 50;
     `;
-    try{
-        db.query(query,[],(err,results)=>{
-            if (err){
-                console.error('Error Fetching Jerseys:',err);
-                res.status(500).json({ error: "Internal Server Error"});
+    try {
+        db.query(query, [], (err, results) => {
+            if (err) {
+                console.error('Error Fetching Jerseys:', err);
+                res.status(500).json({ error: "Internal Server Error" });
             }
-            else if (results.length>0){
+            else if (results.length > 0) {
                 res.status(200).json({ product: results });
             } else {
-                res.status(404).json({ message: 'Jerseys Not Found'});
-            } 
+                res.status(404).json({ message: 'Jerseys Not Found' });
+            }
         })
-    }catch (error) {
-        console.error('Error fetching Jerseys:',error);
-        res.status(500).json({error: 'Internal Server Error'});
+    } catch (error) {
+        console.error('Error fetching Jerseys:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 }
 
 // Takes user_ID
 // select user
-exports.getUser = async (req , res) => {
-    const {uid} = req.query;
+exports.getUser = async (req, res) => {
+    const { uid } = req.query;
     const query = `
         SELECT *
         FROM 431_FANSHOP.User 
         WHERE user_id = ?;
     `;
     db.query(query, [uid], (err, results) => {
-        if (err){
-            console.log('Error fetching user:',err);
-            res.status(500).json({error:'Internal Server Error'});
-        } else if (results.length>0){
-            res.status(200).json({user:results[0], message:'Success'});
+        if (err) {
+            console.log('Error fetching user:', err);
+            res.status(500).json({ error: 'Internal Server Error' });
+        } else if (results.length > 0) {
+            res.status(200).json({ user: results[0], message: 'Success' });
             console.log(results);
-        }else {
-            res.status(404).json({message: 'User not found'});
+        } else {
+            res.status(404).json({ message: 'User not found' });
         }
     })
 }
@@ -484,7 +489,7 @@ exports.getRefunds = async (req, res) => {
 // takes uid
 // selects all transactions 
 exports.getTransactions = async (req, res) => {
-    const {uid} = req.query;
+    const { uid } = req.query;
     const query = `
         SELECT * 
         FROM 431_FANSHOP.Ledger L
@@ -494,15 +499,15 @@ exports.getTransactions = async (req, res) => {
         JOIN 431_FANSHOP.Product P ON R.product_ID = P.product_ID
         WHERE L.user_ID = ?;
     `;
-    db.query(query, [uid], (err, results)=>{
-        if (err){
+    db.query(query, [uid], (err, results) => {
+        if (err) {
             console.log('Error fetching transactions');
-            res.status(500).json({error:'Internal Server Error'});
-        }else if (results.length>0){
-            res.status(200).json({transactions:results, message:'Success'});
+            res.status(500).json({ error: 'Internal Server Error' });
+        } else if (results.length > 0) {
+            res.status(200).json({ transactions: results, message: 'Success' });
             console.log(results);
-        }else {
-            res.status(404).json({message: 'Transactions not found'});
+        } else {
+            res.status(404).json({ message: 'Transactions not found' });
         }
     })
 }
