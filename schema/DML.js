@@ -25,7 +25,7 @@ exports.login = async (req, res) => {
     console.log(email,password);
     const query = `
         SELECT id , fname
-        FROM 431_FANSHOP.User U
+        FROM 431_FANSHOP.User
         JOIN 431_FANSHOP.Password ON User.user_ID = Password.id
         WHERE email = ? AND password = ?;
     `;
@@ -59,7 +59,6 @@ exports.login = async (req, res) => {
 // returns user_ID
 exports.addUser = async (req, res) => {
     const { email, fname, lname, password } = req.body;
-    console.log(email, password);
     const userQuery = `
         INSERT INTO 431_FANSHOP.User (email, fname, lname, sign_date) 
         VALUES (?,?,?,NOW());
@@ -96,24 +95,17 @@ exports.addUser = async (req, res) => {
 }
 
 // TODO
-// Takes value and uid
-// adds record to search table
-exports.addRecentSearch = async (req, res) =>{
-
-}
-
-// TODO
 // Takes product_ID and user_ID
 // returns cartID
 exports.addCartItem = async (req, res) =>{
-
+    const {uid} = req.body;
 }
 
 // TODO 
 // takes productid userid transid
 // add refund record
 exports.addRefund = async (req, res) =>{
-    
+    const {uid, pid, tid} = req.body;
 }
 
 // TODO
@@ -127,7 +119,79 @@ exports.addRefund = async (req, res) =>{
 //      add PID, Trans_ID
 // idea join tables and add all at once
 exports.createTransaction = async (req, res) => {
+    const {uid} = req.body;
 
+    const ledgerQuery = `
+        INSERT INTO 431_FANSHOP.Ledger (user_ID)
+        VALUES (?);
+    `;
+
+    const transIdQuery = `
+        SELECT LAST_INSERT_ID() AS trans_ID;
+    `;
+
+    const transactionQuery = `
+        INSERT INTO 431_FANSHOP.Transaction (trans_ID, total, date)
+        SELECT ?, SUM(P.price), NOW()
+        FROM 431_FANSHOP.Cart C
+        JOIN 431_FANSHOP.Product P ON C.product_ID = P.product_ID
+        WHERE C.uid = ?
+    `;
+
+    const cartQuery = `
+        SELECT product_ID
+        FROM 431_FANSHOP.Cart
+        WHERE uid = ?;
+    `;
+
+    const transactionInfoQuery = `
+        INSERT INTO 431_FANSHOP.Transaction_Info (product_ID, trans_ID)
+        VALUES (?,?);
+    `;
+
+    try{
+        db.query(ledgerQuery,[uid],(err,results)=>{
+            if (err){
+                console.error('Error Adding to Ledger:',err);
+                res.status(500).json({ error: "Internal Server Error"});
+            }
+        });
+        const transResponse = db.query(transIdQuery,[],(err, results)=>{
+            if(err){
+                console.error('Error getting TransID:',err);
+                res.status(500).json({ error: "Internal Server Error"});
+            }
+        });
+        const transID = result[0].trans_ID;
+
+        db.query(transactionQuery, [transID], (err, results)=>{
+            if(err){
+                console.error('Error Adding to Transaction:',err);
+                res.status(500).json({ error: "Internal Server Error"});
+            }
+        })
+
+        const products = db.query(cartQuery, [uid], (err, results)=>{
+            if (err){
+                console.error('Error Fetching Cart:',err);
+                res.status(500).json({ error: "Internal Server Error"});
+            }
+        });
+
+        for (const product of products){
+            db.query(transactionInfoQuery, [product.product_ID, transID],(err, results)=>{
+                if (err){
+                    console.error('Error Adding to Transaction_INFO:',err);
+                    res.status(500).json({ error: "Internal Server Error"});
+                }
+            });
+        }
+
+        res.status(200).json({message: 'Purchase Successful'});
+    }catch(error){
+        console.error('Error Purchasing Items:', error);
+        res.status(500).json({ error: "Internal Server Error"});
+    }
 }
 
 
@@ -174,13 +238,6 @@ exports.deleteUser = async (req, res) => {
     }
 }
 
-
-// TODO
-// takes uid 
-// removes all searches 
-exports.clearSearches = async (req, res) => {
-
-}
 
 
 // TODO
@@ -295,8 +352,8 @@ exports.getProduct = async (req, res) => {
 exports.getJerseys = async (req, res) => {
     const query = `
         SELECT P.product_ID, P.gender, P.title, P.size, P.team, P.color, PL.lname, PL.fname, P.Price
-        FROM 431_FANSHOP.Product P
-        JOIN 431_FANSHOP.Player PL ON P.player = PL.pid
+        FROM 431_FANSHOP.Product AS P
+        JOIN 431_FANSHOP.Player AS PL ON P.player = PL.player
         WHERE P.size = 'medium'
         LIMIT 50;
     `;
