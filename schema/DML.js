@@ -22,7 +22,6 @@ function executeQuery(query, values) {
 // returns user_ID
 exports.login = async (req, res) => {
     const { email, password } = req.query;
-    console.log(email, password);
     const query = `
         SELECT id , fname
         FROM 431_FANSHOP.User
@@ -139,8 +138,6 @@ exports.addRefund = async (req, res) => {
 // idea join tables and add all at once
 exports.createTransaction = async (req, res) => {
     const { uid, product_IDS } = req.body;
-    console.log(product_IDS);
-
     const ledgerQuery = `
         INSERT INTO 431_FANSHOP.Ledger (user_ID)
         VALUES (?);
@@ -315,7 +312,7 @@ exports.searchByPlayer = async (req, res) => {
     const query = `
         SELECT P.product_ID, PL.fname, PL.lname, P.title, P.team, P.color, P.size, P.gender, P.price
         FROM 431_FANSHOP.Product P
-        JOIN 431_FANSHOP.Player PL ON P.player = PL.pid 
+        JOIN 431_FANSHOP.Player PL ON P.player = PL.player 
         WHERE PL.lname = ? AND PL.fname = ?;
     `;
     try {
@@ -341,7 +338,7 @@ exports.searchByPlayer = async (req, res) => {
 exports.searchByTeam = async (req, res) => {
     const { team } = req.query;
     const query = `
-        SELECT P.product_ID, P.gender, P.title, P.size, P.team, P.color, P.price
+        SELECT P.product_ID, P.gender, P.title, P.size, P.team, P.color, P.price,
         CASE WHEN P.title = 'jersey' THEN PL.fname ELSE NULL END AS fname,
         CASE WHEN P.title = 'jersey' THEN PL.lname ELSE NULL END AS lname,
         CASE WHEN P.title != 'jersey' THEN P.details ELSE NULL END AS details
@@ -373,7 +370,7 @@ exports.searchByTeam = async (req, res) => {
 exports.getProduct = async (req, res) => {
     const { product_ID } = req.query;
     const query = `
-        SELECT P.product_ID, P.gender, P.title, P.size, P.team, P.color,
+        SELECT P.product_ID, P.gender, P.title, P.size, P.team, P.color, P.price, 
         CASE WHEN P.title = 'jersey' THEN PL.fname ELSE NULL END AS fname,
         CASE WHEN P.title = 'jersey' THEN PL.lname ELSE NULL END AS lname,
         CASE WHEN P.title != 'jersey' THEN P.details ELSE NULL END AS details
@@ -402,7 +399,7 @@ exports.getProduct = async (req, res) => {
 // Returns product_ID, gender, title, size, team, color, lname, fname
 exports.getJerseys = async (req, res) => {
     const query = `
-        SELECT P.product_ID, P.gender, P.title, P.size, P.team, P.color, PL.lname, PL.fname, P.Price
+        SELECT P.product_ID, P.gender, P.title, P.size, P.team, P.color, PL.lname, PL.fname, P.price
         FROM 431_FANSHOP.Product AS P
         JOIN 431_FANSHOP.Player AS PL ON P.player = PL.player
         WHERE P.size = 'medium'
@@ -441,7 +438,6 @@ exports.getUser = async (req, res) => {
             res.status(500).json({ error: 'Internal Server Error' });
         } else if (results.length > 0) {
             res.status(200).json({ user: results[0], message: 'Success' });
-            console.log(results);
         } else {
             res.status(404).json({ message: 'User not found' });
         }
@@ -490,25 +486,30 @@ exports.getRefunds = async (req, res) => {
 // selects all transactions 
 exports.getTransactions = async (req, res) => {
     const { uid } = req.query;
-    const query = `
+    try {
+        const query = `
         SELECT * 
         FROM 431_FANSHOP.Ledger L
         JOIN 431_FANSHOP.Transaction T ON L.trans_ID = T.trans_ID
-        JOIN 431_FANSHOP.User U ON L.user_ID = U.user_ID
-        JOIN 431_FANSHOP.Refund R ON L.trans_ID = R.trans_ID 
-        JOIN 431_FANSHOP.Product P ON R.product_ID = P.product_ID
+		JOIN 431_FANSHOP.User U ON L.user_ID = U.user_ID
+		JOIN 431_FANSHOP.Transaction_Info TI ON L.trans_ID = TI.trans_ID
+        LEFT JOIN 431_FANSHOP.Refund R ON R.trans_ID = L.trans_ID AND R.product_ID = TI.product_ID
         WHERE L.user_ID = ?;
     `;
-    db.query(query, [uid], (err, results) => {
-        if (err) {
-            console.log('Error fetching transactions');
-            res.status(500).json({ error: 'Internal Server Error' });
-        } else if (results.length > 0) {
-            res.status(200).json({ transactions: results, message: 'Success' });
-            console.log(results);
-        } else {
-            res.status(404).json({ message: 'Transactions not found' });
-        }
-    })
+        db.query(query, [uid], (err, results) => {
+            if (err) {
+                console.log('Error fetching transactions');
+                res.status(500).json({ error: 'Internal Server Error' });
+            } else if (results.length > 0) {
+                res.status(200).json({ transactions: results, message: 'Success' });
+                console.log(results);
+            } else {
+                res.status(404).json({ message: 'Transactions not found' });
+            }
+        });
+    }catch(error){
+        console.error('Error Fetching Transactions:', error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 }
 
