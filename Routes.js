@@ -12,7 +12,7 @@ router.get('/authentication', cors() , dbControllers.login); // done
 router.post('/registeruser', cors() , dbControllers.addUser); // done
 router.post('/addItem', cors() , dbControllers.addCartItem); //done
 router.post('/purchase', cors() , dbControllers.createTransaction); // done
-router.post('/addRefund', cors() , dbControllers.addRefund);
+router.post('/addRefund', cors() , dbControllers.addRefund);//done
 
 // update
 router.post('/updateProfile', cors() , dbControllers.updateUser); // done
@@ -29,7 +29,7 @@ router.get('/product', cors() , dbControllers.getProduct); // done
 router.get('/jerseys', cors() , dbControllers.getJerseys); // done
 router.get('/user', cors() , dbControllers.getUser); // done
 router.get('/cart', cors() , dbControllers.getUserCart);// done
-router.get('/refund', cors() , dbControllers.getRefunds);
+router.get('/refund', cors() , dbControllers.getRefunds);//done
 router.get('/transactions', cors() , dbControllers.getTransactions); // done
 
 module.exports = router;
