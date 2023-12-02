@@ -85,7 +85,6 @@ exports.addUser = async (req, res) => {
                 res.status(404).json({ message: 'UID Not Found' });
             }
         })
-        console.log('User added to database.');
     } catch (error) {
         console.error('Error registering user:', error);
         res.status(500).json({ message: error });
@@ -119,23 +118,33 @@ exports.addCartItem = async (req, res) => {
     }
 }
 
-// TODO 
+
 // takes productid userid transid
 // add refund record
 exports.addRefund = async (req, res) => {
     const { uid, pid, tid } = req.body;
+    const query = `
+        INSERT INTO 431_FANSHOP.Refund (user_ID,trans_ID,product_ID,rdate)
+        VALUES (?,?,?,NOW());
+    `;
+    try {
+        db.query(query, [uid, tid, pid], (err) => {
+            if (err) {
+                console.error('Error Adding Refund:', err);
+                res.status(500).json({ error: "Internal Server Error" });
+            }
+            else {
+                res.status(200).json({ message: 'Refund Added' });
+            }
+
+        });
+    } catch (error) {
+
+    }
 }
 
-// TODO
 // Takes uid
-// fetches all records from cart with uid
-// sum the price of all records to store
-// add new transaction(total,date)
-// store generated trans_id
-// add trans_id and uid to ledger
-// for every product_ID in cart
-//      add PID, Trans_ID
-// idea join tables and add all at once
+// Inserts Into Ledger , Transaction , Transaction_Info
 exports.createTransaction = async (req, res) => {
     const { uid, product_IDS } = req.body;
     const ledgerQuery = `
@@ -312,7 +321,7 @@ exports.searchByPlayer = async (req, res) => {
     const query = `
         SELECT P.product_ID, PL.fname, PL.lname, P.title, P.team, P.color, P.size, P.gender, P.price
         FROM 431_FANSHOP.Product P
-        JOIN 431_FANSHOP.Player PL ON P.player = PL.player 
+        LEFT JOIN 431_FANSHOP.Player PL ON P.player = PL.player 
         WHERE PL.lname = ? AND PL.fname = ?;
     `;
     try {
@@ -454,7 +463,7 @@ exports.getUserCart = async (req, res) => {
             SELECT P.product_ID, P.gender, P.title, P.size, P.team, P.color, PL.lname, PL.fname, P.Price , C.cart_ID
             FROM 431_FANSHOP.Product AS P
             JOIN 431_FANSHOP.Cart AS C ON P.product_ID = C.product_ID
-            JOIN 431_FANSHOP.Player AS PL ON PL.player = P.player
+            LEFT JOIN 431_FANSHOP.Player AS PL ON PL.player = P.player
             WHERE C.uid = ?
             ORDER BY C.cart_ID DESC;
         `;
@@ -478,7 +487,27 @@ exports.getUserCart = async (req, res) => {
 // takes uid
 // selects all refunds
 exports.getRefunds = async (req, res) => {
+    const { uid } = req.query;
+    const query = `
+        SELECT *
+        FROM 431_FANSHOP.Refund R
+        JOIN 431_FANSHOP.Product P ON P.product_ID = R.product_ID
+        JOIN 431_FANSHOP.Transaction T ON T.trans_ID = R.trans_ID
+        `;
+    try {
+        db.query(query, [uid], (err, results) => {
+            if (err) {
+                console.log('Error fetching refunds');
+                res.status(500).json({ error: 'Internal Server Error' });
+            } else {
+                res.status(200).json({ refunds: results, message: 'Success' });
+            }
 
+        });
+    } catch (error) {
+        console.error('Error Retrieving Refunds:', error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 }
 
 // JOINS FIVE TABLES TO RECORD ALL TRANSACTIONS AND INFORMATION FOR DISPLAY OR USE
@@ -488,28 +517,25 @@ exports.getTransactions = async (req, res) => {
     const { uid } = req.query;
     try {
         const query = `
-        SELECT * 
+        SELECT L.trans_ID , T.pdate, T.total, TI.product_ID, P.price, P.gender, P.title, P.team,
+        P.details, P.color, P.size, R.rfnd_ID, R.rdate
         FROM 431_FANSHOP.Ledger L
         JOIN 431_FANSHOP.Transaction T ON L.trans_ID = T.trans_ID
-		JOIN 431_FANSHOP.User U ON L.user_ID = U.user_ID
-		JOIN 431_FANSHOP.Transaction_Info TI ON L.trans_ID = TI.trans_ID
+        JOIN 431_FANSHOP.Transaction_Info TI ON L.trans_ID = TI.trans_ID
         LEFT JOIN 431_FANSHOP.Refund R ON R.trans_ID = L.trans_ID AND R.product_ID = TI.product_ID
-        WHERE L.user_ID = ?;
+        JOIN 431_FANSHOP.Product P ON P.product_ID = TI.product_ID
+        WHERE L.user_ID = ?
+        ORDER BY L.trans_ID DESC; 
     `;
         db.query(query, [uid], (err, results) => {
             if (err) {
                 console.log('Error fetching transactions');
                 res.status(500).json({ error: 'Internal Server Error' });
-            } else if (results.length > 0) {
-                res.status(200).json({ transactions: results, message: 'Success' });
-                console.log(results);
-            } else {
-                res.status(404).json({ message: 'Transactions not found' });
-            }
+            } (results.length > 0)
+            res.status(200).json({ transactions: results, message: 'Success' });
         });
-    }catch(error){
+    } catch (error) {
         console.error('Error Fetching Transactions:', error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 }
-
