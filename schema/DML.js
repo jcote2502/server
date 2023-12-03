@@ -201,22 +201,6 @@ exports.createTransaction = async (req, res) => {
                                     });
                                 }
                             }
-                            // db.query(cartQuery, [uid], (err, cart) => {
-                            //     if (err) {
-                            //         console.error('Error Fetching Cart:', err);
-                            //         res.status(500).json({ error: "Internal Server Error" });
-                            //     } else {
-                            //         const products = cart;
-                            //         for (const product of products) {
-                            //             db.query(transactionInfoQuery, [product.product_ID, transID], (err, results) => {
-                            //                 if (err) {
-                            //                     console.error('Error Adding to Transaction_INFO:', err);
-                            //                     res.status(500).json({ error: "Internal Server Error" });
-                            //                 }
-                            //             });
-                            //         }
-                            //     }
-                            // });
                         }
                     });
             }
