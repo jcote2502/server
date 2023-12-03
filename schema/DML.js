@@ -493,6 +493,7 @@ exports.getRefunds = async (req, res) => {
         FROM 431_FANSHOP.Refund R
         JOIN 431_FANSHOP.Product P ON P.product_ID = R.product_ID
         JOIN 431_FANSHOP.Transaction T ON T.trans_ID = R.trans_ID
+        ORDER BY R.rfnd_ID DESC;
         `;
     try {
         db.query(query, [uid], (err, results) => {
