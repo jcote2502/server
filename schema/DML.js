@@ -481,6 +481,7 @@ exports.getRefunds = async (req, res) => {
         FROM 431_FANSHOP.Refund R
         JOIN 431_FANSHOP.Product P ON P.product_ID = R.product_ID
         JOIN 431_FANSHOP.Transaction T ON T.trans_ID = R.trans_ID
+        WHERE R.user_ID = ?
         ORDER BY R.rfnd_ID DESC;
         `;
     try {
@@ -500,10 +501,12 @@ exports.getRefunds = async (req, res) => {
 }
 
 // JOINS FIVE TABLES TO RECORD ALL TRANSACTIONS AND INFORMATION FOR DISPLAY OR USE
+// ALSO HAS SORT OPTION TO SELECT BY MOST RECENT OR OLDEST
 // takes uid
 // selects all transactions 
 exports.getTransactions = async (req, res) => {
-    const { uid } = req.query;
+    const { uid , sort_filter} = req.query;
+    console.log(sort_filter)
     try {
         const query = `
         SELECT L.trans_ID , T.pdate, T.total, TI.product_ID, P.price, P.gender, P.title, P.team,
@@ -514,14 +517,15 @@ exports.getTransactions = async (req, res) => {
         LEFT JOIN 431_FANSHOP.Refund R ON R.trans_ID = L.trans_ID AND R.product_ID = TI.product_ID
         JOIN 431_FANSHOP.Product P ON P.product_ID = TI.product_ID
         WHERE L.user_ID = ?
-        ORDER BY L.trans_ID DESC; 
+        ORDER BY L.trans_ID ${sort_filter}; 
     `;
         db.query(query, [uid], (err, results) => {
             if (err) {
                 console.log('Error fetching transactions');
                 res.status(500).json({ error: 'Internal Server Error' });
-            } (results.length > 0)
+            }else{
             res.status(200).json({ transactions: results, message: 'Success' });
+            }
         });
     } catch (error) {
         console.error('Error Fetching Transactions:', error);
