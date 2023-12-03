@@ -52,6 +52,8 @@ exports.login = async (req, res) => {
 
 //--INSERT CALLS
 
+
+// UTILIZES TRANSACTION WITH ROLLBACK
 // Takes email, fname, lname, password
 // inserts into user table and password table
 // returns user_ID
@@ -71,21 +73,23 @@ exports.addUser = async (req, res) => {
         WHERE email = ?;
     `;
     try {
+        db.query('BEGIN');
         await executeQuery(userQuery, [email, fname, lname, password]);
         await executeQuery(passQuery, [password, email]);
         db.query(idQuery, [email], (err, results) => {
             if (err) {
+                db.query('ROLLBACK')
                 console.error('Error Fetching UID:', err);
                 res.status(500).json({ error: "Internal Server Error" });
             }
-            else if (results.length > 0) {
+            else{
                 console.log(results[0])
+                db.query('COMMIT');
                 res.status(200).json({ uid: results[0], message: 'User Signed Up' });
-            } else {
-                res.status(404).json({ message: 'UID Not Found' });
             }
         })
     } catch (error) {
+        db.query('ROLLBACK')
         console.error('Error registering user:', error);
         res.status(500).json({ message: error });
     }
