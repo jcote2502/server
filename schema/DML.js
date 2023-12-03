@@ -426,7 +426,7 @@ exports.getUserCart = async (req, res) => {
     try {
         const { uid } = req.query;
         const query = `
-            SELECT P.product_ID, P.gender, P.title, P.size, P.team, P.color, PL.lname, PL.fname, P.Price , C.cart_ID
+            SELECT P.product_ID, P.gender, P.details, P.title, P.size, P.team, P.color, PL.lname, PL.fname, P.Price , C.cart_ID
             FROM 431_FANSHOP.Product AS P
             JOIN 431_FANSHOP.Cart AS C ON P.product_ID = C.product_ID
             LEFT JOIN 431_FANSHOP.Player AS PL ON PL.player = P.player
