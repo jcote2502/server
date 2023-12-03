@@ -18,7 +18,6 @@ router.post('/addRefund', cors() , dbControllers.addRefund);//done
 router.post('/updateProfile', cors() , dbControllers.updateUser); // done
 
 // delete
-router.post('/deleteAccount', cors() , dbControllers.deleteUser) // done
 router.post('/clearCart', cors() , dbControllers.clearCart); //done
 router.post('/removeCartItem', cors() , dbControllers.removeCartItem); //done
 

@@ -225,14 +225,13 @@ exports.updateUser = async (req, res) => {
     const { team, address, uid } = req.body;
     const query = `
         UPDATE 431_FANSHOP.User
-        SET team = ?, address = ?
+        SET team = ?, pr_address = ?
         WHERE user_ID = ?;
     `;
 
     try {
         await executeQuery(query, [team, address, uid]);
         res.status(200).json({ message: 'Successfully updated User.' });
-        console.log('Updated User:', uid);
     } catch (error) {
         console.error('Error Updating user:', error);
         res.status(500).json({ message: error });
@@ -240,27 +239,6 @@ exports.updateUser = async (req, res) => {
 }
 
 //--DELETE CALLS
-
-// takes uid
-// deletes user from database
-//  -> user , password , ledger , transactions , refund
-exports.deleteUser = async (req, res) => {
-    const { uid } = req.body;
-    const query = `
-        DELETE FROM 431_FANSHOP.User
-        WHERE user_ID = ?;
-    `;
-    try {
-        executeQuery(query, [uid]);
-        console.log("Deleted user :", uid);
-        res.status(200).json({ message: 'successfully deleted user' });
-    } catch (error) {
-        console.log("Error deleting user :", error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-}
-
-
 
 
 // takes uid
@@ -506,7 +484,6 @@ exports.getRefunds = async (req, res) => {
 // selects all transactions 
 exports.getTransactions = async (req, res) => {
     const { uid , sort_filter} = req.query;
-    console.log(sort_filter)
     try {
         const query = `
         SELECT L.trans_ID , T.pdate, T.total, TI.product_ID, P.price, P.gender, P.title, P.team,
