@@ -38,7 +38,7 @@ connection.query(createDBQuery, (err) => {
         const DB = mysql.createConnection({
             host: 'localhost',
             user: 'root',
-            password: 'lacrosse25',
+            password: 'password',
             database: databaseName,
         });
 
