@@ -1,0 +1,90 @@
+431 Final Project User Manual
+By: Justin Cote, Liam Garrett
+Same as 431w STAGE 3 READ ME
+
+Our project consists of a frontend (designed in React) and a backend (structured using nodejs). We are using netlify to host our frontend on a virtual page accessible to anybody with the url. We will provide this url to you later in the readme so you can access the site. 
+
+You will be required to download our backend and interface with a terminal to initilize and construct our database on your local machine. Below we will guide you through how to …
+
+Install MySQL on your device 
+Configure MySQL to work be able to connect to our database
+Install required packages to run our backend (npm package)
+Execute commands to initilize our database
+Start the backend server to listen for requests from the front end
+Find the webpage our UI resides on for interaction
+
+This project was worked on for many hours. Both Justin and Liam gave all efforts to provide you with something fun to interact with, a setting where all rubric guidelines are met, and hopefully something refreshing from other projects. We are very excited for you to see our work and what we have learned in this class!
+
+
+Instructions Start on Next Page
+
+
+
+
+
+
+
+STEP 1 (Setting Up MySQL on your local machine)
+
+1.1
+First we need to download MySQL on your device if not already installed. 
+If you already have MySQL downloaded and running on your device you can skip to section 1.2.
+
+Click on this link mySQL and download the 8.0.35 version corresponding to your system. Make sure to download MSI or DMG for whatever option it gives you.
+
+
+It should prompt you to open the file you just downloaded. Continue through the installation process. Do not edit any fields just click through , UNTIL YOU REACH ACCOUNTS AND ROLES.
+
+When it asks you to create a password you must enter ‘password’. Our backend is made to connect to your local mysql server via 
+host: 'localhost', // MariaDB server host
+    	user: 'root', // Database Username
+    	password: 'password', // Database Password
+   	database: '431_FANSHOP'
+THIS IS A CRUICIAL STEP. 
+
+Continue throught the steps regularly to complete setup.
+
+1.2 ONLY IF YOU ALREADY HAVE MySQL PREVIOUSLY DOWNLOADED …
+Make sure your root password is ‘password’. If your password is already set to something else here is a guide on how to change it to ‘password’. resetting permissions
+
+If you can not figure out how to change your password please email jac7396@psu.edu that way we can find a solution asap!
+
+
+Step 2 (downloading backend server and nodejs)
+
+2.1
+We have added the 431w github account to our backend repository (via announcement).
+Our repo name is called “server” and is owned by jcote2502.
+You can download the zipped version of server.
+
+2.2
+Once our repo is cloned to your local machine we need to install a few packages.
+Visit nodejs and download the package specific to your machine.
+After downloading, click through the installation process.
+Navigate (in your command line/terminal/etc.) to the project directory  ‘server’ and run the following command.
+
+	server-main>  npm install body-parser cors csv-parser fs mysql2
+
+Stay in your command line.
+
+
+
+
+Step 3 ( Initilizing Database and local api )
+
+3.1
+Still in that same directory run the following : 
+
+	node PROJ_INNIT.js
+
+What for it to show success and then you can press ctrl+c. This program adds our database to your system for future connection. Then uses DML to initialize the tables and populate the products and players data for display on our website.
+
+3.2
+In that same directory run the following : 
+	node 
+
+
+
+
+
+
