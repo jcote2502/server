@@ -3,7 +3,7 @@ const mysql = require('mysql2');
 const db = mysql.createConnection({
     host: 'localhost', // MariaDB server host
     user: 'root', // Database Username
-    password: 'lacrosse25', // Database Password
+    password: 'password', // Database Password
     database: '431_FANSHOP' // database name
 });
 

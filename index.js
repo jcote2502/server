@@ -1,7 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const createTables = require('./schema/DDL');
 const DatabaseRoutes = require('./Routes.js');
 const app = express();
 const port = process.env.PORT || 3004;

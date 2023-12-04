@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const cors = require('cors');
-const dbControllers = require('./schema/DML.js');
+const dbControllers = require('./SQL/DML.js');
 
 // Every route located in this file
 
